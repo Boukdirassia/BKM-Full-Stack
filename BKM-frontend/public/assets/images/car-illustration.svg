@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="600px" viewBox="0 0 800 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Car Illustration</title>
+    <defs>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="goldGradient">
+            <stop stop-color="#FFD700" offset="0%"></stop>
+            <stop stop-color="#FFA500" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="shadowGradient">
+            <stop stop-color="#333333" stop-opacity="0.2" offset="0%"></stop>
+            <stop stop-color="#000000" stop-opacity="0.1" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Car" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- Car Shadow -->
+        <ellipse id="Shadow" fill="url(#shadowGradient)" cx="400" cy="520" rx="280" ry="40"></ellipse>
+        
+        <!-- Car Body -->
+        <path d="M150,420 C150,420 180,350 250,330 C320,310 380,300 450,300 C520,300 580,310 650,330 C720,350 750,420 750,420 L750,450 C750,470 730,490 710,490 L190,490 C170,490 150,470 150,450 L150,420 Z" id="CarBody" fill="#333333"></path>
+        
+        <!-- Car Top -->
+        <path d="M280,330 C280,330 320,250 400,250 C480,250 520,330 520,330 L280,330 Z" id="CarTop" fill="#444444"></path>
+        
+        <!-- Windows -->
+        <path d="M290,330 C290,330 325,260 400,260 C475,260 510,330 510,330 L290,330 Z" id="Windows" fill="#87CEFA"></path>
+        
+        <!-- Car Details -->
+        <rect id="FrontWindow" fill="#87CEFA" x="520" y="310" width="20" height="40" rx="5"></rect>
+        <rect id="BackWindow" fill="#87CEFA" x="260" y="310" width="20" height="40" rx="5"></rect>
+        
+        <!-- Wheels -->
+        <circle id="FrontWheel" fill="#111111" cx="600" cy="490" r="60"></circle>
+        <circle id="FrontWheelInner" fill="#333333" cx="600" cy="490" r="40"></circle>
+        <circle id="FrontWheelCenter" fill="url(#goldGradient)" cx="600" cy="490" r="15"></circle>
+        
+        <circle id="BackWheel" fill="#111111" cx="200" cy="490" r="60"></circle>
+        <circle id="BackWheelInner" fill="#333333" cx="200" cy="490" r="40"></circle>
+        <circle id="BackWheelCenter" fill="url(#goldGradient)" cx="200" cy="490" r="15"></circle>
+        
+        <!-- Lights -->
+        <rect id="Headlight" fill="url(#goldGradient)" x="730" y="380" width="20" height="30" rx="10"></rect>
+        <rect id="Taillight" fill="#FF0000" x="150" y="380" width="20" height="30" rx="10"></rect>
+        
+        <!-- Door -->
+        <path d="M350,330 L350,480 L500,480 L500,330 L350,330 Z" id="Door" stroke="#555555" stroke-width="2"></path>
+        <circle id="DoorHandle" fill="url(#goldGradient)" cx="470" cy="400" r="10"></circle>
+        
+        <!-- BKM Logo -->
+        <circle id="LogoBackground" fill="url(#goldGradient)" cx="400" cy="400" r="30"></circle>
+        <text id="LogoText" font-family="Arial-BoldMT, Arial" font-size="24" font-weight="bold" fill="#FFFFFF">
+            <tspan x="380" y="408">BKM</tspan>
+        </text>
+    </g>
+</svg>

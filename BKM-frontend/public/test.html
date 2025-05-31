@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test BKM</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f5f5f5;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #000;
+            margin-bottom: 1rem;
+        }
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 1rem;
+        }
+        .gold {
+            color: #FFD700;
+        }
+        button {
+            background-color: #FFD700;
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background-color: #FFC000;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo"><span class="gold">BK</span>M</div>
+        <h1>Test de l'application BKM</h1>
+        <p>Si vous voyez cette page, le serveur web fonctionne correctement.</p>
+        <button onclick="window.location.href='/'">Retour à l'accueil</button>
+    </div>
+</body>
+</html>

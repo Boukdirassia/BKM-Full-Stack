@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test d'accès aux fichiers statiques</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #FFD700; }
+        .test-image { border: 1px solid #ddd; margin: 10px 0; max-width: 300px; }
+    </style>
+</head>
+<body>
+    <h1>Test d'accès aux fichiers statiques</h1>
+    <p>Cette page teste si les fichiers statiques sont correctement servis depuis le dossier uploads.</p>
+    
+    <h2>Test de fichier texte</h2>
+    <p>Le fichier test.txt devrait être accessible à <a href="/uploads/vehicules/test.txt" target="_blank">/uploads/vehicules/test.txt</a></p>
+    
+    <h2>Téléchargement d'image de test</h2>
+    <form action="/voitures/1/upload-photo" method="post" enctype="multipart/form-data">
+        <input type="file" name="photo" accept="image/*" required>
+        <button type="submit">Télécharger l'image</button>
+    </form>
+    
+    <h2>Test d'affichage d'image</h2>
+    <p>Si une image a été téléchargée pour la voiture avec ID=1, elle devrait apparaître ci-dessous :</p>
+    <img src="/uploads/vehicules/voiture-1.jpg" alt="Voiture 1 JPG" class="test-image" onerror="this.style.display='none'">
+    <img src="/uploads/vehicules/voiture-1.png" alt="Voiture 1 PNG" class="test-image" onerror="this.style.display='none'">
+    <img src="/uploads/vehicules/voiture-1.jpeg" alt="Voiture 1 JPEG" class="test-image" onerror="this.style.display='none'">
+</body>
+</html>

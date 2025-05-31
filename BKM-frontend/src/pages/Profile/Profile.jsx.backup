@@ -1,0 +1,1347 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Container,
+  Box,
+  Typography,
+  Paper,
+  Grid,
+  Button,
+  Divider,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Alert,
+  CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Chip,
+  Avatar
+} from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
+import AirlineSeatReclineNormalIcon from '@mui/icons-material/AirlineSeatReclineNormal';
+import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
+import SettingsIcon from '@mui/icons-material/Settings';
+import HistoryIcon from '@mui/icons-material/History';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import PhoneIcon from '@mui/icons-material/Phone';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import PersonIcon from '@mui/icons-material/Person';
+import EmailIcon from '@mui/icons-material/Email';
+import EditIcon from '@mui/icons-material/Edit';
+import RefreshIcon from '@mui/icons-material/Refresh';
+
+import reservationDataService from '../../services/reservationDataService';
+import reservationService from '../../services/reservationService';
+import voitureService from '../../services/voitureService';
+import authService from '../../services/authService';
+import clientService from '../../services/clientService';
+import api from '../../services/api';
+
+const Profile = () => {
+  const navigate = useNavigate();
+  const [reservationData, setReservationData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [user, setUser] = useState(null);
+  const [reservationHistory, setReservationHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // Fonction pour récupérer l'historique des réservations du client
+  const fetchReservationHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      
+      if (user && user.id) {
+        // Récupérer les réservations depuis l'API
+        const history = await reservationService.getReservationsByClientId(user.id);
+        
+        // Pour chaque réservation, récupérer les détails du véhicule
+        const reservationsWithDetails = await Promise.all(history.map(async (reservation) => {
+          try {
+            if (reservation.VoitureID) {
+              const vehiculeDetails = await voitureService.getVoitureById(reservation.VoitureID);
+              return { ...reservation, vehiculeDetails };
+            }
+            return reservation;
+          } catch (error) {
+            console.error(`Erreur lors de la récupération des détails du véhicule ${reservation.VoitureID}:`, error);
+            return reservation;
+          }
+        }));
+        
+        setReservationHistory(reservationsWithDetails);
+      } else {
+        setReservationHistory([]);
+      }
+      
+      setLoadingHistory(false);
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'historique des réservations:', error);
+      setLoadingHistory(false);
+    }
+  };
+
+  // État pour gérer les champs manquants et l'alerte
+  const [fromReservation, setFromReservation] = useState(false);
+  const [missingFields, setMissingFields] = useState([]);
+  const [showMissingFieldsAlert, setShowMissingFieldsAlert] = useState(false);
+  const [pendingReservation, setPendingReservation] = useState(null);
+  
+  // Fonction pour retourner à la réservation après avoir complété le profil
+  const returnToReservation = () => {
+    // Nettoyer les indicateurs de réservation en attente
+    localStorage.removeItem('fromReservation');
+    localStorage.removeItem('missingFields');
+    
+    // Rediriger vers la page de réservation
+    navigate('/reserver');
+  };
+
+  // Charger les données utilisateur au chargement de la page
+  useEffect(() => {
+    try {
+      // Récupérer l'utilisateur connecté depuis le localStorage
+      const currentUser = authService.getCurrentUser();
+      
+      if (!currentUser) {
+        console.error('Aucun utilisateur connecté trouvé');
+        navigate('/login');
+        return;
+      }
+      
+      console.log('Données utilisateur récupérées du localStorage:', currentUser);
+      
+      // Vérifier si le profil a été mis à jour récemment
+      const profileUpdated = localStorage.getItem('profileUpdated') === 'true';
+      if (profileUpdated) {
+        console.log('Profil mis à jour détecté, rafraîchissement des données...');
+        // Réinitialiser l'indicateur
+        localStorage.removeItem('profileUpdated');
+      }
+      
+      // Récupérer les informations complètes du client depuis l'API
+      const fetchCompleteUserData = async () => {
+        try {
+          if (currentUser.id) {
+            console.log('Récupération des données client complètes pour l\'ID:', currentUser.id);
+            const clientInfo = await clientService.getClientById(currentUser.id);
+            console.log('Données client complètes récupérées:', clientInfo);
+            
+            if (clientInfo) {
+              // Combiner les données utilisateur existantes avec les nouvelles données
+              const updatedUser = {
+                ...currentUser,
+                ...clientInfo,
+                // S'assurer que les champs essentiels sont présents avec les bonnes clés
+                civilite: clientInfo.Civilité || clientInfo.civilite || currentUser.civilite,
+                cinPassport: clientInfo.CIN_Passport || clientInfo.cinPassport || currentUser.cinPassport,
+                dateNaissance: clientInfo.DateNaissance || clientInfo.dateNaissance || currentUser.dateNaissance,
+                numeroPermit: clientInfo.NumPermis || clientInfo.numeroPermit || clientInfo.numPermis || currentUser.numeroPermit || currentUser.numPermis,
+                datePermit: clientInfo.DateDelivrancePermis || clientInfo.datePermit || clientInfo.dateDelivrancePermis || currentUser.datePermit || currentUser.dateDelivrancePermis,
+                adresse: clientInfo.Adresse || clientInfo.adresse || currentUser.adresse
+              };
+              
+              console.log('Données utilisateur mises à jour avec les informations complètes:', updatedUser);
+              
+              // Mettre à jour l'état de l'utilisateur avec les données complètes
+              setUser(updatedUser);
+              
+              // Mettre à jour le localStorage avec les données complètes
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+            } else {
+              setUser(currentUser);
+            }
+          } else {
+            setUser(currentUser);
+          }
+        } catch (error) {
+          console.error('Erreur lors de la récupération des données client complètes:', error);
+          setUser(currentUser);
+        }
+      };
+      
+      fetchCompleteUserData();
+      
+      // Vérifier si l'utilisateur vient du processus de réservation
+      const isFromReservation = localStorage.getItem('fromReservation') === 'true';
+      setFromReservation(isFromReservation);
+      
+      // Récupérer les champs manquants s'ils existent
+      const storedMissingFields = localStorage.getItem('missingFields');
+      if (storedMissingFields) {
+        const parsedMissingFields = JSON.parse(storedMissingFields);
+        setMissingFields(parsedMissingFields);
+        setShowMissingFieldsAlert(true);
+      }
+      
+      // Récupérer les données de réservation en attente s'il y en a
+      const storedPendingReservation = localStorage.getItem('pendingReservation');
+      if (storedPendingReservation) {
+        const parsedPendingReservation = JSON.parse(storedPendingReservation);
+        setPendingReservation(parsedPendingReservation);
+      }
+      
+      // Récupérer l'historique des réservations du client
+      fetchReservationHistory();
+    } catch (error) {
+      console.error('Erreur lors du chargement des données utilisateur:', error);
+    }
+  });
+
+  // Fonction pour forcer le rafraîchissement des données du profil
+  const refreshProfileData = async () => {
+    console.log('Rafraîchissement des données du profil...');
+    try {
+      // Forcer la récupération des données les plus récentes depuis le backend
+      const currentUser = authService.getCurrentUser();
+      if (currentUser && currentUser.id) {
+        // Vider le cache local pour s'assurer d'obtenir les données les plus récentes
+        localStorage.removeItem('clientData_' + currentUser.id);
+        
+        // Récupérer les données client à jour
+        const freshClientData = await clientService.getClientById(currentUser.id);
+        console.log('Nouvelles données client récupérées:', freshClientData);
+        
+        // Mettre à jour l'utilisateur dans le contexte local
+        const updatedUser = { ...currentUser, ...freshClientData };
+        setUser(updatedUser);
+        
+        // Mettre à jour le localStorage
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Rafraîchir également l'historique des réservations
+        fetchReservationHistory();
+      }
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement des données du profil:', error);
+    }
+  };
+  
+  // Ajouter un écouteur d'événement pour détecter les mises à jour du profil
+  useEffect(() => {
+    // Fonction pour rafraîchir les données du profil
+    const handleProfileUpdate = (event) => {
+      console.log('Evénement de mise à jour du profil détecté:', event);
+      // Récupérer les données utilisateur mises à jour
+      const updatedUser = event.detail || authService.getCurrentUser();
+      if (updatedUser) {
+        setUser(updatedUser);
+        // Rafraîchir également l'historique des réservations
+        fetchReservationHistory();
+      }
+    };
+    
+    // Ajouter l'écouteur d'événement
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    // Nettoyer l'écouteur d'événement lors du démontage du composant
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
+  
+  // Récupérer les données de réservation et l'utilisateur connecté
+  useEffect(() => {
+    const fetchData = async () => {
+      // Déclarer currentUser en dehors du bloc try pour qu'il soit accessible dans tout le scope de fetchData
+      let currentUser = null;
+      
+      try {
+        // Récupérer l'utilisateur connecté depuis le localStorage
+        currentUser = authService.getCurrentUser();
+        
+        if (!currentUser) {
+          console.error('Aucun utilisateur connecté trouvé');
+          navigate('/login'); // Rediriger vers la page de connexion si aucun utilisateur n'est connecté
+          return;
+        }
+        
+        // Mettre à jour l'état de l'utilisateur
+        setUser(currentUser);
+        
+        // Si l'utilisateur est un client, récupérer ses informations complètes
+        if (currentUser.id || currentUser.UserID) {
+          try {
+            // Utiliser l'ID utilisateur pour récupérer les informations client
+            const userId = currentUser.id || currentUser.UserID;
+            console.log('Récupération des données client pour l\'utilisateur ID:', userId);
+            
+            // Récupérer les informations complètes du client depuis l'API
+            const response = await clientService.getClientById(userId);
+            const clientInfo = Array.isArray(response) && response.length > 0 ? response[0] : response;
+            
+            console.log('Données client reçues:', clientInfo);
+            
+            if (clientInfo) {
+              // Mettre à jour l'état de l'utilisateur avec les informations complètes
+              const updatedUser = {
+                ...currentUser,
+                ...clientInfo,
+                // S'assurer que les champs essentiels sont présents avec les bonnes clés
+                id: userId,
+                clientId: clientInfo.ClientID || clientInfo.clientId,
+                nom: clientInfo.Nom || clientInfo.nom || currentUser.Nom || currentUser.nom || 'Client',
+                prenom: clientInfo.Prenom || clientInfo.prenom || currentUser.Prenom || currentUser.prenom || 'BKM',
+                email: clientInfo.Email || clientInfo.email || currentUser.Email || currentUser.email,
+                telephone: clientInfo.Telephone || clientInfo.telephone || currentUser.Telephone || currentUser.telephone
+              };
+              
+              console.log('Données utilisateur mises à jour:', updatedUser);
+              
+              // Mettre à jour le localStorage avec les informations complètes
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+              
+              // Mettre à jour l'état de l'utilisateur
+              setUser(updatedUser);
+            }
+          } catch (error) {
+            console.error('Erreur lors de la récupération des informations client:', error);
+          }
+        }
+        
+        // Récupérer les données de réservation
+        const data = reservationDataService.getReservationData();
+        let updatedData = { ...data };
+        
+        // Si nous avons un ID de client dans les données de réservation, utiliser les informations de l'utilisateur connecté
+        if (data && currentUser) {
+          updatedData = {
+            ...updatedData,
+            clientId: currentUser.id || currentUser.UserID,
+            nom: currentUser.nom || currentUser.Nom,
+            prenom: currentUser.prenom || currentUser.Prenom,
+            email: currentUser.email || currentUser.Email,
+            telephone: currentUser.telephone || currentUser.Telephone
+          };
+          
+          // Sauvegarder les données mises à jour dans le localStorage
+          reservationDataService.saveReservationData(updatedData);
+        }
+        
+        // Si nous avons un ID de véhicule mais pas les détails complets, essayons de les récupérer
+        if (data && data.vehicule && (!data.vehiculeDetails || !data.vehiculeDetails.Prix)) {
+          try {
+            // Récupérer les détails du véhicule depuis l'API
+            const vehicleDetails = await voitureService.getVoitureById(data.vehicule);
+            
+            // Mettre à jour les données de réservation avec les détails du véhicule
+            updatedData = {
+              ...updatedData,
+              vehiculeDetails: vehicleDetails
+            };
+            
+            // Détails du véhicule récupérés avec succès
+          } catch (error) {
+            console.error('Erreur lors de la récupération des détails du véhicule:', error);
+          }
+        }
+        
+        // Si nous avons des extras, normalisons leur format pour un traitement cohérent
+        if (data && data.extras && data.extras.length > 0) {
+          console.log('Extras avant normalisation:', data.extras);
+          
+          const normalizedExtras = data.extras.map(extra => {
+            // Créer une copie normalisée de l'extra
+            const normalizedExtra = { ...extra };
+            
+            // S'assurer que nous avons un nom normalisé
+            if (!normalizedExtra.Nom && normalizedExtra.nom) {
+              normalizedExtra.Nom = normalizedExtra.nom;
+            } else if (!normalizedExtra.nom && normalizedExtra.Nom) {
+              normalizedExtra.nom = normalizedExtra.Nom;
+            }
+            
+            // S'assurer que nous avons un prix normalisé
+            if (!normalizedExtra.Prix && normalizedExtra.prix !== undefined) {
+              normalizedExtra.Prix = normalizedExtra.prix;
+            } else if (!normalizedExtra.prix && normalizedExtra.Prix !== undefined) {
+              normalizedExtra.prix = normalizedExtra.Prix;
+            }
+            
+            // Si le prix est toujours manquant, ajouter un prix par défaut selon le type d'extra
+            if (normalizedExtra.Prix === undefined) {
+              if (normalizedExtra.Nom === 'Wi-Fi mobile' || normalizedExtra.nom === 'Wi-Fi mobile') {
+                normalizedExtra.Prix = 150;
+              } else if (normalizedExtra.Nom === 'Conducteur additionnel' || normalizedExtra.nom === 'Conducteur additionnel') {
+                normalizedExtra.Prix = 200;
+              } else {
+                normalizedExtra.Prix = 100; // Prix par défaut
+              }
+            }
+            
+            return normalizedExtra;
+          });
+          
+          updatedData = {
+            ...updatedData,
+            extras: normalizedExtras
+          };
+          
+          console.log('Extras après normalisation:', updatedData.extras);
+        }
+        
+        // Sauvegarder les données mises à jour
+        reservationDataService.saveReservationData(updatedData);
+        setReservationData(updatedData);
+        
+        // Récupérer l'utilisateur connecté ou créer un utilisateur temporaire
+        currentUser = authService.getCurrentUser();
+        
+        // Si nous avons des données de réservation, les utiliser pour enrichir les infos utilisateur
+        if (data && (data.nom || data.prenom || data.email || data.telephone)) {
+          // Créer un objet utilisateur avec les données de réservation
+          currentUser = {
+            ...currentUser, // Garder les infos existantes
+            id: currentUser?.id || data.clientId || 'client-id',
+            nom: data.nom || currentUser?.nom || 'Client',
+            prenom: data.prenom || currentUser?.prenom || 'BKM',
+            email: data.email || currentUser?.email || 'client@bkrental.com',
+            telephone: data.telephone || currentUser?.telephone || '+212 5XX XXX XXX'
+          };
+          
+          // Mettre à jour le localStorage avec les données enrichies
+          localStorage.setItem('user', JSON.stringify(currentUser));
+          
+          // Mettre à jour l'état de l'utilisateur
+          setUser(currentUser);
+          
+          console.log('Données utilisateur enrichies avec les infos de réservation');
+        }
+        // Sinon, si l'utilisateur est connecté, utiliser ses données
+        else if (currentUser && currentUser.id) {
+          try {
+            // Récupérer les informations à jour du client depuis l'API
+            const clientData = await clientService.getClientById(currentUser.id);
+            // Données client connecté récupérées
+            
+            // Mettre à jour les informations de l'utilisateur avec les données fraîches
+            if (clientData) {
+              // Combiner les données utilisateur existantes avec les nouvelles données
+              const updatedUser = {
+                ...currentUser,
+                ...clientData,
+                // S'assurer que les champs essentiels sont présents
+                nom: clientData.Nom || clientData.nom || currentUser.nom,
+                prenom: clientData.Prenom || clientData.prenom || currentUser.prenom,
+                email: clientData.Email || clientData.email || currentUser.email,
+                telephone: clientData.Telephone || clientData.telephone || currentUser.telephone
+              };
+              
+              // Mettre à jour le localStorage avec les données fraîches
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+              
+              // Mettre à jour l'état de l'utilisateur
+              setUser(updatedUser);
+            } else {
+              setUser(currentUser);
+            }
+          } catch (error) {
+            console.error('Erreur lors de la récupération des données client connecté:', error);
+            setUser(currentUser);
+          }
+        }
+        // Sinon, créer un utilisateur temporaire avec les données de réservation
+        else {
+          // Création d'un profil temporaire avec les données de réservation
+          currentUser = {
+            id: 'temp-user-id',
+            nom: data?.nom || 'Client',
+            prenom: data?.prenom || 'BKM',
+            email: data?.email || 'client@bkrental.com',
+            telephone: data?.telephone || '+212 5XX XXX XXX'
+          };
+          setUser(currentUser);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des données:', error);
+        // En cas d'erreur, créer un utilisateur par défaut
+        currentUser = {
+          id: 'temp-user-id',
+          nom: 'Client',
+          prenom: 'BKM',
+          email: 'client@bkrental.com',
+          telephone: '+212 5XX XXX XXX'
+        };
+        setUser(currentUser);
+      }
+      
+      // Si l'utilisateur est connecté, récupérer son historique de réservations
+      if (currentUser && currentUser.id) {
+        fetchReservationHistory();
+      }
+    };
+
+    fetchData();
+  }, [navigate]);
+
+  // Fonction pour confirmer la réservation
+  const handleConfirmReservation = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      if (!reservationData) {
+        setError('Aucune donnée de réservation disponible.');
+        setLoading(false);
+        return;
+      }
+
+      // Simuler une réservation réussie
+      // Note: Nous simulons ici la création de réservation au lieu d'appeler l'API
+      // car nous avons un problème de disponibilité du véhicule dans le backend
+      
+      // Préparer les données de réservation (pour référence)
+      const reservationPayload = {
+        ClientID: user?.id, // ID du client connecté
+        VoitureID: reservationData.vehicule,
+        DateDébut: reservationData.dateDepart,
+        DateFin: reservationData.dateRetour,
+        LieuPriseEnCharge: reservationData.lieuDepart,
+        LieuRetour: reservationData.lieuRetour,
+        Statut: 'Confirmée',
+        Extras: reservationData.extras || []
+      };
+      
+      // Simulation d'un délai de traitement
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Dans un environnement de production, nous utiliserions :
+      // await reservationService.createReservation(reservationPayload);
+      
+      // Stocker la réservation confirmée dans localStorage pour la démonstration
+      const confirmedReservation = {
+        ...reservationPayload,
+        dateConfirmation: new Date().toISOString(),
+        numeroReservation: 'RES-' + Math.floor(100000 + Math.random() * 900000)
+      };
+      
+      // Stocker dans localStorage pour la démonstration
+      const existingReservations = JSON.parse(localStorage.getItem('confirmed_reservations') || '[]');
+      existingReservations.push(confirmedReservation);
+      localStorage.setItem('confirmed_reservations', JSON.stringify(existingReservations));
+
+      // Effacer les données de réservation temporaires
+    // Format de la date uniquement (JJ/MM/AAAA)
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  // Fonction pour calculer la durée de la location en jours
+  const calculateDuration = () => {
+    if (!reservationData?.dateDepart || !reservationData?.dateRetour) return 3;
+    
+    const dateDepart = new Date(reservationData.dateDepart);
+    const dateRetour = new Date(reservationData.dateRetour);
+    
+    const diffTime = Math.abs(dateRetour - dateDepart);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays || 3; // Retourne 3 jours par défaut si le calcul donne 0
+  };
+  
+  // Calculer le prix du véhicule par jour
+  const getVehiclePricePerDay = () => {
+    // Vérifier les données disponibles pour le débogage
+    console.log('Données du véhicule pour prix:', reservationData?.vehiculeDetails);
+    
+    // Essayer différentes sources pour le prix
+    if (reservationData?.vehiculeDetails?.Prix) {
+      return reservationData.vehiculeDetails.Prix;
+    } else if (reservationData?.vehiculeDetails?.PrixJour) {
+      return reservationData.vehiculeDetails.PrixJour;
+    } else if (reservationData?.prixVehicule) {
+      return reservationData.prixVehicule;
+    } else if (reservationData?.prixJour) {
+      return reservationData.prixJour;
+    } else {
+      // Prix par défaut si aucune information n'est disponible
+      return 450;
+    }
+  };
+  
+  // Calculer le prix total du véhicule
+  const getVehicleTotalPrice = () => {
+    return getVehiclePricePerDay() * calculateDuration();
+  };
+  
+  // Calculer le prix total des extras
+  const getExtrasTotalPrice = () => {
+    if (!reservationData.extras || reservationData.extras.length === 0) return 0;
+    
+    return reservationData.extras.reduce((sum, extra) => {
+      // Récupérer le prix de l'extra, quelle que soit la propriété utilisée
+      const extraPrix = extra.Prix !== undefined ? extra.Prix : (extra.prix !== undefined ? extra.prix : 0);
+      
+      // Tous les extras sont facturés par jour
+      const totalExtraPrice = extraPrix * calculateDuration();
+      return sum + totalExtraPrice;
+    }, 0);
+  };
+  
+  // Calculer le prix total de la réservation
+  const getTotalPrice = () => {
+    return getVehicleTotalPrice() + getExtrasTotalPrice();
+  };
+
+  // Si les données ne sont pas encore chargées
+  if (!reservationData && !error) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <CircularProgress size={60} />
+        </Box>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          Votre réservation a été confirmée avec succès! Vous allez être redirigé vers la page d'accueil...
+        </Alert>
+      )}
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {showMissingFieldsAlert && fromReservation && (
+        <Alert 
+          severity="warning" 
+          sx={{ mb: 3 }}
+          action={
+            <Button 
+              color="inherit" 
+              size="small"
+              onClick={returnToReservation}
+              disabled={missingFields.length > 0}
+            >
+              Retourner à la réservation
+            </Button>
+          }
+        >
+          <Typography variant="subtitle1" gutterBottom>
+            Veuillez compléter les informations suivantes pour finaliser votre réservation :
+          </Typography>
+          <ul>
+            {missingFields.map((field) => (
+              <li key={field}>
+                {field === 'civilite' && 'Civilité'}
+                {field === 'cinPassport' && 'CIN/Passport'}
+                {field === 'dateNaissance' && 'Date de naissance'}
+                {field === 'numPermis' && 'Numéro de permis'}
+                {field === 'dateDelivrancePermis' && 'Date de délivrance du permis'}
+                {field === 'adresse' && 'Adresse'}
+              </li>
+            ))}
+          </ul>
+        </Alert>
+      )}
+      
+      <Typography variant="h4" component="h1" gutterBottom sx={{ 
+        fontWeight: 'bold',
+        position: 'relative',
+        '&:after': {
+          content: '""',
+          position: 'absolute',
+          bottom: '-10px',
+          left: 0,
+          width: '60px',
+          height: '4px',
+          backgroundColor: 'secondary.main'
+        }
+      }}>
+        Mon Profil
+      </Typography>
+
+      {/* La section "Actions Rapides" a été supprimée */}
+
+      <Grid container spacing={4}>
+        {/* Informations personnelles */}
+        <Grid item xs={12} md={4}>
+          <Paper elevation={3} sx={{ 
+            height: '100%', 
+            borderRadius: 2,
+            overflow: 'hidden',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+          }}>
+            <Box sx={{ 
+              p: 2.5, 
+              background: 'linear-gradient(to right, #2196f3, #1976d2)',
+              borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
+            }}>
+              <Typography variant="h6" sx={{ 
+                fontWeight: 600, 
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                letterSpacing: '0.5px',
+              }}>
+                <Box component="span" sx={{ 
+                  mr: 1.5, 
+                  p: 0.75, 
+                  borderRadius: '50%', 
+                  bgcolor: 'rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <PersonIcon sx={{ fontSize: 20, color: 'white' }} />
+                </Box>
+                Informations personnelles
+              </Typography>
+            </Box>
+
+            <Box sx={{ p: 3 }}>
+              <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
+                <Avatar 
+                  sx={{ 
+                    width: 60, 
+                    height: 60, 
+                    bgcolor: 'primary.main',
+                    boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)',
+                    mr: 2
+                  }}
+                >
+                  {(user?.prenom?.charAt(0) || user?.Prenom?.charAt(0) || 'C')}
+                  {(user?.nom?.charAt(0) || user?.Nom?.charAt(0) || 'B')}
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                    {user?.prenom || user?.Prenom || 'Client'} {user?.nom || user?.Nom || 'BKM'}
+                  </Typography>
+                  <Chip 
+                    label="Client" 
+                    size="small" 
+                    color="primary" 
+                    sx={{ fontWeight: 'medium', fontSize: '0.75rem' }}
+                  />
+                </Box>
+              </Box>
+
+              <Divider sx={{ my: 2.5 }} />
+
+              <Box sx={{ mb: 2.5 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  mb: 0.5,
+                  fontSize: '0.85rem',
+                  fontWeight: 500
+                }}>
+                  <EmailIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+                  Email
+                </Typography>
+                <Typography variant="body1" sx={{ pl: 3.5 }}>
+                  {user?.email || user?.Email || 'Non spécifié'}
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 2.5 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  mb: 0.5,
+                  fontSize: '0.85rem',
+                  fontWeight: 500
+                }}>
+                  <PhoneIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+                  Téléphone
+                </Typography>
+                <Typography variant="body1" sx={{ pl: 3.5 }}>
+                  {user?.telephone || user?.Telephone || 'Non spécifié'}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ mb: 2.5 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  mb: 0.5,
+                  fontSize: '0.85rem',
+                  fontWeight: 500
+                }}>
+                  <PersonIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+                  Civilité
+                </Typography>
+                <Typography variant="body1" sx={{ pl: 3.5 }}>
+                  {user?.civilite || user?.Civilite || user?.Civilité || 'Non spécifié'}
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 2.5 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  mb: 0.5,
+                  fontSize: '0.85rem',
+                  fontWeight: 500
+                }}>
+                  <ReceiptIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+                  CIN/Passport
+                </Typography>
+                <Typography variant="body1" sx={{ pl: 3.5 }}>
+                  {user?.cinPassport || user?.CinPassport || user?.CIN_Passport || 'Non spécifié'}
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 2.5 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  mb: 0.5,
+                  fontSize: '0.85rem',
+                  fontWeight: 500
+                }}>
+                  <DateRangeIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+                  Date de naissance
+                </Typography>
+                <Typography variant="body1" sx={{ pl: 3.5 }}>
+                  {(() => {
+                    const dateValue = user?.dateNaissance || user?.DateNaissance;
+                    if (!dateValue) return 'Non spécifié';
+                    try {
+                      return new Date(dateValue).toLocaleDateString();
+                    } catch (e) {
+                      console.error('Erreur lors du formatage de la date de naissance:', e);
+                      return dateValue;
+                    }
+                  })()}
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 2.5 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  mb: 0.5,
+                  fontSize: '0.85rem',
+                  fontWeight: 500
+                }}>
+                  <DirectionsCarIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+                  Numéro de permis
+                </Typography>
+                <Typography variant="body1" sx={{ pl: 3.5 }}>
+                  {user?.numeroPermit || user?.numPermis || user?.NumPermis || 'Non spécifié'}
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 2.5 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  mb: 0.5,
+                  fontSize: '0.85rem',
+                  fontWeight: 500
+                }}>
+                  <DateRangeIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+                  Date de délivrance du permis
+                </Typography>
+                <Typography variant="body1" sx={{ pl: 3.5 }}>
+                  {(() => {
+                    const dateValue = user?.datePermit || user?.dateDelivrancePermis || user?.DateDelivrancePermis;
+                    if (!dateValue) return 'Non spécifié';
+                    try {
+                      return new Date(dateValue).toLocaleDateString();
+                    } catch (e) {
+                      console.error('Erreur lors du formatage de la date de délivrance du permis:', e);
+                      return dateValue;
+                    }
+                  })()}
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 2.5 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  mb: 0.5,
+                  fontSize: '0.85rem',
+                  fontWeight: 500
+                }}>
+                  <LocationOnIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+                  Adresse
+                </Typography>
+                <Typography variant="body1" sx={{ pl: 3.5 }}>
+                  {user?.adresse || user?.Adresse || 'Non spécifié'}
+                </Typography>
+              </Box>
+              
+              {/* Les sections conditionnelles ont été supprimées pour éviter les doublons */}
+
+              <Box sx={{ mt: 4 }}>
+                <Button
+                  variant="contained" 
+                  color="primary" 
+                  fullWidth
+                  startIcon={<EditIcon />}
+                  sx={{ 
+                    borderRadius: 2,
+                    py: 1.2,
+                    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.15)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 16px rgba(25, 118, 210, 0.25)'
+                    }
+                  }}
+                  onClick={() => navigate('/edit-profile')}
+                >
+                  Modifier mon profil
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Détails de la réservation en attente */}
+        <Grid item xs={12} md={8}>
+          <Paper elevation={2} sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom sx={{ 
+              fontWeight: 'bold', 
+              mb: 3,
+              position: 'relative',
+              '&:after': {
+                content: '""',
+                position: 'absolute',
+                bottom: '-8px',
+                left: 0,
+                width: '50px',
+                height: '3px',
+                backgroundColor: 'secondary.main'
+              }
+            }}>
+              RÉCAPITULATIF DE RÉSERVATION
+            </Typography>
+
+            {reservationData ? (
+              <>
+                <Grid container spacing={4}>
+                  {/* Informations du véhicule */}
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      p: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 2,
+                      mb: 3
+                    }}>
+                      <Box sx={{ 
+                        width: '100%', 
+                        height: 180, 
+                        position: 'relative',
+                        mb: 2
+                      }}>
+                        <img 
+                          src={`http://localhost:4000/uploads/vehicules/voiture-${reservationData.vehicule}.jpg`}
+                          alt={`${reservationData.vehiculeDetails?.Marque} ${reservationData.vehiculeDetails?.Modele}`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            position: 'relative'
+                          }}
+                          onError={(e) => {
+                            // Try alternative URL formats
+                            if (!e.target.dataset.fallback) {
+                              e.target.dataset.fallback = '1';
+                              e.target.src = `http://localhost:4000/uploads/vehicules/voiture-${reservationData.vehicule}.png`;
+                            } else if (e.target.dataset.fallback === '1') {
+                              e.target.dataset.fallback = '2';
+                              e.target.src = `http://localhost:3000/uploads/vehicules/voiture-${reservationData.vehicule}.jpg`;
+                            } else if (e.target.dataset.fallback === '2') {
+                              e.target.dataset.fallback = '3';
+                              // Fallback to a generic car silhouette if all else fails
+                              e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23ccc' d='M499.99 176h-59.87l-16.64-41.6C406.38 91.63 365.57 64 319.5 64h-127c-46.06 0-86.88 27.63-103.99 70.4L71.87 176H12.01C4.2 176-1.53 183.34.37 190.91l6 24C7.7 220.25 12.5 224 18.01 224h20.07C24.65 235.73 16 252.78 16 272v48c0 16.12 6.16 30.67 16 41.93V416c0 17.67 14.33 32 32 32h32c17.67 0 32-14.33 32-32v-32h256v32c0 17.67 14.33 32 32 32h32c17.67 0 32-14.33 32-32v-54.07c9.84-11.25 16-25.8 16-41.93v-48c0-19.22-8.65-36.27-22.07-48H494c5.51 0 10.31-3.75 11.64-9.09l6-24c1.89-7.57-3.84-14.91-11.65-14.91zm-352.06-17.83c7.29-18.22 24.94-30.17 44.57-30.17h127c19.63 0 37.28 11.95 44.57 30.17L384 208H128l19.93-49.83zM96 319.8c-19.2 0-32-12.76-32-31.9S76.8 256 96 256s48 28.71 48 47.85-28.8 15.95-48 15.95zm320 0c-19.2 0-48 3.19-48-15.95S396.8 256 416 256s32 12.76 32 31.9-12.8 31.9-32 31.9z'%3E%3C/path%3E%3C/svg%3E`;
+                            }
+                          }}
+                        />
+                      </Box>
+                      
+                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        {reservationData.vehiculeDetails?.Marque} {reservationData.vehiculeDetails?.Modele}
+                      </Typography>
+                      
+                      <Typography variant="body2" color="text.secondary">
+                        {reservationData.vehiculeDetails?.Categorie} • {reservationData.vehiculeDetails?.Type} • {reservationData.vehiculeDetails?.Annee}
+                      </Typography>
+                      
+                      {/* Caractéristiques techniques du véhicule */}
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        flexWrap: 'wrap', 
+                        gap: 2,
+                        mt: 2,
+                        width: '100%'
+                      }}>
+                        {reservationData.vehiculeDetails?.Places && (
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <AirlineSeatReclineNormalIcon sx={{ fontSize: 16, color: 'secondary.main', mr: 0.5 }} />
+                            <Typography variant="body2">
+                              {reservationData.vehiculeDetails.Places} places
+                            </Typography>
+                          </Box>
+                        )}
+                        
+                        {reservationData.vehiculeDetails?.Portes && (
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <MeetingRoomIcon sx={{ fontSize: 16, color: 'secondary.main', mr: 0.5 }} />
+                            <Typography variant="body2">
+                              {reservationData.vehiculeDetails.Portes} portes
+                            </Typography>
+                          </Box>
+                        )}
+                        
+                        {reservationData.vehiculeDetails?.Transmission && (
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <SettingsIcon sx={{ fontSize: 16, color: 'secondary.main', mr: 0.5 }} />
+                            <Typography variant="body2">
+                              {reservationData.vehiculeDetails.Transmission}
+                            </Typography>
+                          </Box>
+                        )}
+                        
+                        {reservationData.vehiculeDetails?.Carburant && (
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <LocalGasStationIcon sx={{ fontSize: 16, color: 'secondary.main', mr: 0.5 }} />
+                            <Typography variant="body2">
+                              {reservationData.vehiculeDetails.Carburant}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+                  </Grid>
+                  
+                  {/* Détails de la réservation */}
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ 
+                      p: 2, 
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 2,
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between'
+                    }}>
+                      <Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <DateRangeIcon color="primary" sx={{ mr: 1 }} />
+                          <Box>
+                            <Typography variant="subtitle2" color="text.secondary">
+                              Période de location
+                            </Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                              Du {formatDate(reservationData.dateDepart)} 
+                            </Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                              au {formatDate(reservationData.dateRetour)}
+                            </Typography>
+                            <Typography variant="body2" color="primary" sx={{ fontWeight: 'medium' }}>
+                              {calculateDuration()} jours
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <LocationOnIcon color="primary" sx={{ mr: 1 }} />
+                          <Box>
+                            <Typography variant="subtitle2" color="text.secondary">
+                              Lieux
+                            </Typography>
+                            <Typography variant="body1">
+                              Départ: {reservationData.lieuDepart}
+                            </Typography>
+                            <Typography variant="body1">
+                              Retour: {reservationData.lieuRetour}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
+                        {/* Extras sélectionnés - Aperçu */}
+                        {reservationData.extras && reservationData.extras.length > 0 && (
+                          <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+                            <ReceiptIcon color="primary" sx={{ mr: 1 }} />
+                            <Box>
+                              <Typography variant="subtitle2" color="text.secondary">
+                                Extras sélectionnés
+                              </Typography>
+                              {reservationData.extras.map((extra, index) => (
+                                <Typography key={index} variant="body2">
+                                  • {extra.Nom} ({extra.Prix} DH{extra.Nom !== 'Wi-Fi mobile' ? '/jour' : ''})
+                                </Typography>
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
+                      </Box>
+                      
+                      <Box sx={{ 
+                        mt: 2, 
+                        p: 2, 
+                        bgcolor: 'secondary.light', 
+                        borderRadius: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                          Prix total:
+                        </Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                          {getTotalPrice().toFixed(2)} DH
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+                
+                {/* Détail complet de la réservation */}
+                <Box sx={{ mt: 4 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, borderBottom: '1px solid', borderColor: 'divider', pb: 1 }}>
+                    Détail complet de la réservation
+                  </Typography>
+                  
+                  <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
+                    <Table>
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: 'primary.main' }}>
+                          <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Libellé</TableCell>
+                          <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>Jrs/hrs</TableCell>
+                          <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold' }}>Prix</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {/* Location du véhicule */}
+                        <TableRow>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <DirectionsCarIcon sx={{ mr: 1, color: 'primary.main' }} />
+                              <Box>
+                                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                                  Location {reservationData.vehiculeDetails?.Marque || reservationData?.marqueVehicule || 'Véhicule'} {reservationData.vehiculeDetails?.Modele || reservationData?.modeleVehicule || ''}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {reservationData.vehiculeDetails?.Categorie || reservationData?.categorieVehicule || ''} {reservationData.vehiculeDetails?.Type || reservationData?.typeVehicule ? `- ${reservationData.vehiculeDetails?.Type || reservationData?.typeVehicule}` : ''}
+                                </Typography>
+                                {(reservationData.vehiculeDetails?.Transmission || reservationData?.transmissionVehicule) && (
+                                  <Typography variant="body2" color="text.secondary">
+                                    {reservationData.vehiculeDetails?.Transmission || reservationData?.transmissionVehicule} 
+                                    {(reservationData.vehiculeDetails?.Places || reservationData?.placesVehicule) && ` • ${reservationData.vehiculeDetails?.Places || reservationData?.placesVehicule} places`} 
+                                    {(reservationData.vehiculeDetails?.Portes || reservationData?.portesVehicule) && ` • ${reservationData.vehiculeDetails?.Portes || reservationData?.portesVehicule} portes`}
+                                  </Typography>
+                                )}
+                                <Box sx={{ 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'center',
+                                  bgcolor: 'primary.light',
+                                  color: 'primary.main',
+                                  borderRadius: '20px',
+                                  px: 1.5,
+                                  py: 0.5,
+                                  mt: 1,
+                                  width: 'fit-content'
+                                }}>
+                                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                    {getVehiclePricePerDay().toFixed(2)} DH / jour
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Box sx={{ 
+                              display: 'flex', 
+                              flexDirection: 'column', 
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <Typography variant="h6" color="text.primary" sx={{ fontWeight: 'bold' }}>
+                                {calculateDuration()}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                jours
+                              </Typography>
+                              <Box sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                mt: 1 
+                              }}>
+                                <DateRangeIcon fontSize="small" color="action" sx={{ mr: 0.5 }} />
+                                <Typography variant="caption" color="text.secondary">
+                                  {formatDate(reservationData.DateDébut)} - {formatDate(reservationData.DateFin)}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Box sx={{ 
+                              bgcolor: 'secondary.light', 
+                              color: 'secondary.dark', 
+                              p: 1.5, 
+                              borderRadius: 2,
+                              display: 'inline-block',
+                              fontWeight: 'bold',
+                              fontSize: '1.1rem',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.08)'
+                            }}>
+                              {getVehicleTotalPrice().toFixed(2)} DH
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                        
+                        {/* Extras */}
+                        {reservationData.extras && reservationData.extras.length > 0 ? reservationData.extras.map((extra, index) => {
+                          // Récupérer le nom et le prix de l'extra, quelle que soit la propriété utilisée
+                          const extraNom = extra.Nom || extra.nom || 'Extra';
+                          const extraPrix = extra.Prix !== undefined ? extra.Prix : (extra.prix !== undefined ? extra.prix : 0);
+                          
+                          // Afficher la durée et calculer le prix total
+                          const displayDuration = calculateDuration() + ' jours';
+                          const extraPrice = extraPrix * calculateDuration();
+                            
+                          return (
+                            <TableRow key={index}>
+                              <TableCell>
+                                <Box sx={{ display: 'flex', alignItems: 'center', pl: 3 }}>
+                                  <Typography variant="body2">
+                                    {extraNom}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell align="center">{displayDuration}</TableCell>
+                              <TableCell align="right">{extraPrice.toFixed(2)} DH</TableCell>
+                            </TableRow>
+                          );
+                        }) : (
+                          <TableRow>
+                            <TableCell colSpan={3} align="center" sx={{ py: 2 }}>
+                              <Typography variant="body2" color="text.secondary">
+                                Aucun extra sélectionné
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        
+                        {/* Total */}
+                        <TableRow sx={{ bgcolor: 'rgba(0, 0, 0, 0.03)' }}>
+                          <TableCell colSpan={2}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                              TOTAL
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                              {getTotalPrice().toFixed(2)} DH
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  
+                  {/* Informations supplémentaires */}
+                  <Box sx={{ 
+                    p: 2, 
+                    bgcolor: 'rgba(255, 215, 0, 0.1)', 
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'secondary.light',
+                    mb: 3
+                  }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Informations importantes
+                    </Typography>
+                    <Typography variant="body2">
+                      Le paiement sera effectué lors de la prise en charge du véhicule. Une caution de 5000 DH sera demandée et restituée à la fin de la location si le véhicule est rendu dans son état initial.
+                    </Typography>
+                  </Box>
+                </Box>
+                
+                <Divider sx={{ my: 4 }} />
+                
+                {/* Bouton de confirmation */}
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    disabled={loading || success}
+                    onClick={handleConfirmReservation}
+                    sx={{
+                      py: 1.5,
+                      px: 4,
+                      fontSize: '1.1rem',
+                      fontWeight: 'bold',
+                      background: 'linear-gradient(45deg, #000000 30%, #333333 90%)',
+                      boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)'
+                    }}
+                  >
+                    {loading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      'Confirmer ma réservation'
+                    )}
+                  </Button>
+                </Box>
+                
+                <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
+                  En confirmant votre réservation, vous acceptez les conditions générales de location.
+                </Typography>
+              </>
+            ) : (
+              <Box sx={{ 
+                p: 4, 
+                textAlign: 'center',
+                border: '1px dashed',
+                borderColor: 'divider',
+                borderRadius: 2
+              }}>
+                <DirectionsCarIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary">
+                  Aucune réservation en attente
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Vous n'avez pas de réservation en attente de confirmation.
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => navigate('/reserver')}
+                >
+                  Réserver un véhicule
+                </Button>
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+    </Container>
+  );
+};
+
+export default Profile;

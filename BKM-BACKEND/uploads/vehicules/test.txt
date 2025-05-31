@@ -1,0 +1,1 @@
+Ceci est un fichier de test pour vérifier que les fichiers statiques sont correctement servis.

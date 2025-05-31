@@ -1,0 +1,72 @@
+/* Styles personnalisés pour le calendrier */
+.MuiPickersPopper-root .MuiPaper-root {
+  background-color: #222 !important;
+  color: white !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+  border-radius: 8px !important;
+  border: 1px solid #444 !important;
+}
+
+.MuiPickersPopper-root .MuiPickersDay-root {
+  color: white !important;
+}
+
+.MuiPickersPopper-root .MuiPickersDay-root.Mui-disabled {
+  color: rgba(255,255,255,0.3) !important;
+}
+
+.MuiPickersPopper-root .MuiDayCalendar-weekDayLabel {
+  color: #FFD700 !important;
+  font-weight: bold !important;
+}
+
+.MuiPickersPopper-root .MuiPickersDay-today {
+  border: 1px solid #FFD700 !important;
+}
+
+.MuiPickersPopper-root .MuiPickersDay-root.Mui-selected {
+  background-color: #FFD700 !important;
+  color: black !important;
+}
+
+.MuiPickersPopper-root .MuiPickersDay-root:hover {
+  background-color: rgba(255, 215, 0, 0.2) !important;
+}
+
+.MuiPickersPopper-root .MuiPickersCalendarHeader-label {
+  font-weight: bold !important;
+  font-size: 1rem !important;
+  color: white !important;
+}
+
+.MuiPickersPopper-root .MuiButtonBase-root {
+  color: #FFD700 !important;
+}
+
+.MuiPickersPopper-root .MuiYearCalendar-root .MuiPickersYear-yearButton {
+  color: white !important;
+}
+
+.MuiPickersPopper-root .MuiYearCalendar-root .MuiPickersYear-yearButton.Mui-selected {
+  background-color: #FFD700 !important;
+  color: black !important;
+}
+
+.MuiPickersPopper-root .MuiYearCalendar-root .MuiPickersYear-yearButton:hover {
+  background-color: rgba(255, 215, 0, 0.2) !important;
+}
+
+/* Styles pour les boutons du bas */
+.MuiPickersPopper-root .MuiDialogActions-root .MuiButton-root {
+  color: #FFD700 !important;
+}
+
+/* Style pour le fond du mois et de l'année */
+.MuiPickersPopper-root .MuiPickersCalendarHeader-switchViewButton {
+  color: #FFD700 !important;
+}
+
+/* Style pour les flèches de navigation */
+.MuiPickersPopper-root .MuiPickersArrowSwitcher-button {
+  color: #FFD700 !important;
+}

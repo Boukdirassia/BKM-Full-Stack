@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test de téléchargement d'images</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #FFD700; }
+        .test-image { border: 1px solid #ddd; margin: 10px 0; max-width: 300px; }
+        .form-group { margin-bottom: 20px; }
+        button { background-color: #FFD700; color: black; border: none; padding: 10px 15px; cursor: pointer; }
+        #status { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Test de téléchargement d'images</h1>
+    <p>Cette page permet de tester le téléchargement et l'affichage des photos de véhicules.</p>
+    
+    <div class="form-group">
+        <h2>Télécharger une image pour un véhicule</h2>
+        <form id="uploadForm">
+            <div>
+                <label for="vehicleId">ID du véhicule:</label>
+                <input type="number" id="vehicleId" required min="1" value="1">
+            </div>
+            <div style="margin-top: 10px;">
+                <input type="file" id="photoFile" accept="image/*" required>
+            </div>
+            <div style="margin-top: 10px;">
+                <button type="submit">Télécharger l'image</button>
+            </div>
+        </form>
+    </div>
+    
+    <div id="status"></div>
+    
+    <div class="form-group">
+        <h2>Tester l'affichage d'une image</h2>
+        <div>
+            <label for="testId">ID du véhicule à tester:</label>
+            <input type="number" id="testId" min="1" value="1">
+            <button id="testButton">Tester l'affichage</button>
+        </div>
+        <div id="imageTest" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const vehicleId = document.getElementById('vehicleId').value;
+            const photoFile = document.getElementById('photoFile').files[0];
+            const statusDiv = document.getElementById('status');
+            
+            if (!photoFile) {
+                statusDiv.innerHTML = '<p style="color: red;">Veuillez sélectionner un fichier</p>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('photo', photoFile);
+            
+            statusDiv.innerHTML = '<p>Téléchargement en cours...</p>';
+            
+            try {
+                const response = await fetch(`http://localhost:4000/voitures/${vehicleId}/upload-photo`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <p style="color: green;">Téléchargement réussi!</p>
+                        <p>Message: ${data.message}</p>
+                        <p>URL de la photo: ${data.photoUrl}</p>
+                        <img src="http://localhost:4000${data.photoUrl}" alt="Photo téléchargée" class="test-image">
+                    `;
+                } else {
+                    statusDiv.innerHTML = `<p style="color: red;">Erreur: ${data.message}</p>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<p style="color: red;">Erreur: ${error.message}</p>`;
+            }
+        });
+        
+        document.getElementById('testButton').addEventListener('click', () => {
+            const testId = document.getElementById('testId').value;
+            const imageTest = document.getElementById('imageTest');
+            
+            imageTest.innerHTML = `
+                <h3>Test avec différentes extensions:</h3>
+                <div>
+                    <h4>JPG:</h4>
+                    <img src="http://localhost:4000/uploads/vehicules/voiture-${testId}.jpg" 
+                         alt="Test JPG" class="test-image" 
+                         onerror="this.parentNode.innerHTML += '<p style=\'color:red\'>Image non trouvée</p>'">
+                </div>
+                <div>
+                    <h4>PNG:</h4>
+                    <img src="http://localhost:4000/uploads/vehicules/voiture-${testId}.png" 
+                         alt="Test PNG" class="test-image"
+                         onerror="this.parentNode.innerHTML += '<p style=\'color:red\'>Image non trouvée</p>'">
+                </div>
+                <div>
+                    <h4>JPEG:</h4>
+                    <img src="http://localhost:4000/uploads/vehicules/voiture-${testId}.jpeg" 
+                         alt="Test JPEG" class="test-image"
+                         onerror="this.parentNode.innerHTML += '<p style=\'color:red\'>Image non trouvée</p>'">
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
