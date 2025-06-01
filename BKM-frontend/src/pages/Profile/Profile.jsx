@@ -209,8 +209,8 @@ const Profile = () => {
       const dureeJours = pendingReservation.dureeJours || 7;
       
       // S'assurer que les lieux de départ et d'arrivée sont correctement récupérés de toutes les sources possibles
-      const lieuDepart = pendingReservation.lieuDepart || 
-                        pendingReservation.LieuDepart || 
+      const lieuDepart = pendingReservation.lieuPrise || 
+                        pendingReservation.lieuPrise || 
                         pendingReservation.lieuPriseEnCharge || 
                         'Agence principale';
                         
