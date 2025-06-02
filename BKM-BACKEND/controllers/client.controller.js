@@ -1,5 +1,7 @@
 const Client = require('../models/client.model');
 const db = require('../config/db');
+const bcrypt = require('bcrypt');
+
 
 // Récupérer tous les clients
 exports.getAllClients = (req, res) => {
@@ -106,102 +108,196 @@ exports.getClientById = (req, res) => {
 };
 
 // Créer un nouveau client
+// exports.createClient = (req, res) => {
+//   // Valider la requête
+//   if (!req.body) {
+//     res.status(400).json({ message: "Le contenu ne peut pas être vide!" });
+//     return;
+//   }
+
+//   // Vérifier si les données utilisateur sont fournies
+//   if (!req.body.utilisateur) {
+//     res.status(400).json({ message: "Les informations utilisateur sont requises" });
+//     return;
+//   }
+
+//   // Commencer une transaction pour garantir l'intégrité des données
+//   db.beginTransaction(err => {
+//     if (err) {
+//       return res.status(500).json({
+//         message: "Une erreur s'est produite lors de l'initialisation de la transaction",
+//         error: err.message
+//       });
+//     }
+
+//     // 1. Créer l'utilisateur d'abord
+//     const userData = req.body.utilisateur;
+    
+//     const createUserQuery = `
+//       INSERT INTO utilisateurs (Nom, Prenom, Email, Telephone, Password, Roles)
+//       VALUES (?, ?, ?, ?, ?, ?)
+//     `;
+    
+//     db.query(
+//       createUserQuery,
+//       [
+//         userData.Nom,
+//         userData.Prenom,
+//         userData.Email,
+//         userData.Telephone,
+//         userData.Password || 'password123', // Valeur par défaut si non fournie
+//         userData.Roles || 'Client' // Valeur par défaut si non fournie
+//       ],
+//       (err, userResult) => {
+//         if (err) {
+//           return db.rollback(() => {
+//             res.status(500).json({
+//               message: "Une erreur s'est produite lors de la création de l'utilisateur",
+//               error: err.message
+//             });
+//           });
+//         }
+
+//         // Récupérer l'ID de l'utilisateur créé
+//         const userId = userResult.insertId;
+
+//         // 2. Créer le client avec l'ID utilisateur
+//         const client = {
+//           UserID: userId,
+//           Civilité: req.body.Civilité,
+//           CIN_Passport: req.body.CIN_Passport,
+//           DateNaissance: req.body.DateNaissance,
+//           NumPermis: req.body.NumPermis,
+//           DateDelivrancePermis: req.body.DateDelivrancePermis,
+//           Adresse: req.body.Adresse
+//         };
+
+//         // Enregistrer le client dans la base de données
+//         Client.create(client, (err, clientResult) => {
+//           if (err) {
+//             return db.rollback(() => {
+//               res.status(500).json({
+//                 message: "Une erreur s'est produite lors de la création du client",
+//                 error: err.message
+//               });
+//             });
+//           }
+
+//           // Valider la transaction
+//           db.commit(err => {
+//             if (err) {
+//               return db.rollback(() => {
+//                 res.status(500).json({
+//                   message: "Une erreur s'est produite lors de la validation de la transaction",
+//                   error: err.message
+//                 });
+//               });
+//             }
+
+//             // Renvoyer les données du client créé avec l'ID utilisateur
+//             res.status(201).json({
+//               ...clientResult,
+//               UserID: userId,
+//               ...userData
+//             });
+//           });
+//         });
+//       }
+//     );
+//     console.log(userData);
+    
+//   });
+// };
+
+// Créer un nouveau client version hashed avec bcrypt
 exports.createClient = (req, res) => {
-  // Valider la requête
-  if (!req.body) {
-    res.status(400).json({ message: "Le contenu ne peut pas être vide!" });
-    return;
+  if (!req.body || !req.body.utilisateur) {
+    return res.status(400).json({ message: "Les informations utilisateur sont requises" });
   }
 
-  // Vérifier si les données utilisateur sont fournies
-  if (!req.body.utilisateur) {
-    res.status(400).json({ message: "Les informations utilisateur sont requises" });
-    return;
-  }
+  const userData = req.body.utilisateur;
 
-  // Commencer une transaction pour garantir l'intégrité des données
-  db.beginTransaction(err => {
-    if (err) {
-      return res.status(500).json({
-        message: "Une erreur s'est produite lors de l'initialisation de la transaction",
-        error: err.message
-      });
+  bcrypt.hash(userData.Password || 'password123', 10, (hashErr, hashedPassword) => {
+    if (hashErr) {
+      return res.status(500).json({ message: "Erreur lors du hachage du mot de passe", error: hashErr.message });
     }
 
-    // 1. Créer l'utilisateur d'abord
-    const userData = req.body.utilisateur;
-    
-    const createUserQuery = `
-      INSERT INTO utilisateurs (Nom, Prenom, Email, Telephone, Password, Roles)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-    
-    db.query(
-      createUserQuery,
-      [
-        userData.Nom,
-        userData.Prenom,
-        userData.Email,
-        userData.Telephone,
-        userData.Password || 'password123', // Valeur par défaut si non fournie
-        userData.Roles || 'Client' // Valeur par défaut si non fournie
-      ],
-      (err, userResult) => {
-        if (err) {
-          return db.rollback(() => {
-            res.status(500).json({
-              message: "Une erreur s'est produite lors de la création de l'utilisateur",
-              error: err.message
-            });
-          });
-        }
+    db.beginTransaction(err => {
+      if (err) {
+        return res.status(500).json({
+          message: "Une erreur s'est produite lors de l'initialisation de la transaction",
+          error: err.message
+        });
+      }
 
-        // Récupérer l'ID de l'utilisateur créé
-        const userId = userResult.insertId;
+      const createUserQuery = `
+        INSERT INTO utilisateurs (Nom, Prenom, Email, Telephone, Password, Roles)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
 
-        // 2. Créer le client avec l'ID utilisateur
-        const client = {
-          UserID: userId,
-          Civilité: req.body.Civilité,
-          CIN_Passport: req.body.CIN_Passport,
-          DateNaissance: req.body.DateNaissance,
-          NumPermis: req.body.NumPermis,
-          DateDelivrancePermis: req.body.DateDelivrancePermis,
-          Adresse: req.body.Adresse
-        };
-
-        // Enregistrer le client dans la base de données
-        Client.create(client, (err, clientResult) => {
+      db.query(
+        createUserQuery,
+        [
+          userData.Nom,
+          userData.Prenom,
+          userData.Email,
+          userData.Telephone,
+          hashedPassword,
+          userData.Roles || 'Client'
+        ],
+        (err, userResult) => {
           if (err) {
             return db.rollback(() => {
               res.status(500).json({
-                message: "Une erreur s'est produite lors de la création du client",
+                message: "Une erreur s'est produite lors de la création de l'utilisateur",
                 error: err.message
               });
             });
           }
 
-          // Valider la transaction
-          db.commit(err => {
+          const userId = userResult.insertId;
+
+          const client = {
+            UserID: userId,
+            Civilité: req.body.Civilité,
+            CIN_Passport: req.body.CIN_Passport,
+            DateNaissance: req.body.DateNaissance,
+            NumPermis: req.body.NumPermis,
+            DateDelivrancePermis: req.body.DateDelivrancePermis,
+            Adresse: req.body.Adresse
+          };
+
+          Client.create(client, (err, clientResult) => {
             if (err) {
               return db.rollback(() => {
                 res.status(500).json({
-                  message: "Une erreur s'est produite lors de la validation de la transaction",
+                  message: "Une erreur s'est produite lors de la création du client",
                   error: err.message
                 });
               });
             }
 
-            // Renvoyer les données du client créé avec l'ID utilisateur
-            res.status(201).json({
-              ...clientResult,
-              UserID: userId,
-              ...userData
+            db.commit(err => {
+              if (err) {
+                return db.rollback(() => {
+                  res.status(500).json({
+                    message: "Une erreur s'est produite lors de la validation de la transaction",
+                    error: err.message
+                  });
+                });
+              }
+
+              res.status(201).json({
+                ...clientResult,
+                UserID: userId,
+                ...userData,
+                Password: '********'
+              });
             });
           });
-        });
-      }
-    );
+        }
+      );
+    });
   });
 };
 
