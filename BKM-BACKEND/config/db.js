@@ -3,7 +3,7 @@ const mysql = require('mysql2');
 // Configuration de la connexion avec gestion explicite de l'encodage UTF-8
 const connection = mysql.createConnection({
   host: 'localhost',
-  port: 3307,
+  port: 3306,
   user: 'root',
   password: '',
   database: 'locationvoitures',
