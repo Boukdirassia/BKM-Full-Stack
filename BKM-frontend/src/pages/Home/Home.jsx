@@ -1708,7 +1708,7 @@ const Home = () => {
                     <CardActions sx={{ p: { xs: 1.5, sm: 2, md: 2.5 }, bgcolor: '#1a1a1a', borderTop: '1px solid #222' }}>
                       <Button 
                         component={Link}
-                        to={`/reserver/${vehicle.VoitureID}`}
+                        to={`/reserver`}
                         variant="contained"
                         fullWidth
                         sx={{ 

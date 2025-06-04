@@ -510,7 +510,7 @@ const Vehicules = () => {
                     <Box sx={{ mt: 2 }}>
                       <Button 
                         component={Link} 
-                        to={`/reserver?voiture=${voiture.VoitureID}`} 
+                        to={`/reserver`} 
                         variant="contained" 
                         disabled={!voiture.Disponibilite}
                         fullWidth
