@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -6,7 +6,6 @@ import {
   Grid,
   TextField,
   Button,
-  Paper,
   IconButton,
   Card,
   CardContent,

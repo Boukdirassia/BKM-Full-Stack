@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Box,
@@ -10,7 +10,6 @@ import {
   InputAdornment,
   IconButton,
   Alert,
-  Divider,
 } from '@mui/material';
 import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';

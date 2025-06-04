@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import authService from '../../services/authService';
 import reservationDataService from '../../services/reservationDataService';
-import ReservationLogin from '../../components/ReservationLogin';
-import SimpleLoginForm from '../../components/SimpleLoginForm';
 import {
   Container,
   Grid,
@@ -29,8 +27,6 @@ import {
   TextField,
   MenuItem,
   Checkbox,
-  FormControlLabel,
-  FormGroup,
   FormControl,
   InputLabel,
   Select,
@@ -38,7 +34,6 @@ import {
   Divider,
 } from '@mui/material';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import PersonIcon from '@mui/icons-material/Person';
 import LuggageIcon from '@mui/icons-material/Luggage';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -103,208 +98,6 @@ const locations = [
   'Aéroport de Marrakech',
   'Aéroport de Tanger'
 ];
-
-const RecapSection = ({ selectedVehicle, departureInfo, arrivalInfo }) => {
-  const calculateDays = (dateDepart, dateRetour) => {
-    if (!dateDepart || !dateRetour) return 0;
-    const start = new Date(dateDepart);
-    const end = new Date(dateRetour);
-    const diffTime = Math.abs(end - start);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  const calculatePrice = (days, vehiculeId) => {
-    const vehicle = cars.featured.find(car => car.id === vehiculeId);
-    return vehicle ? days * vehicle.price : 0;
-  };
-
-  const numberOfDays = calculateDays(departureInfo.date, arrivalInfo.date);
-  const totalPrice = selectedVehicle ? selectedVehicle.price * numberOfDays : 0;
-
-  return (
-    <Box sx={{ mt: 4, p: 3, bgcolor: '#1a1a1a', borderRadius: 2 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" sx={{ color: 'white', mb: 1 }}>
-          Résumé de votre réservation
-        </Typography>
-        <Typography variant="subtitle2" sx={{ color: '#888' }}>
-          Détails de la location
-        </Typography>
-      </Box>
-
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="subtitle1" sx={{ color: 'white', mb: 2 }}>
-          Informations de départ
-        </Typography>
-        <Box sx={{ ml: 2, color: '#888' }}>
-          <Typography variant="body2" sx={{ mb: 1 }}>Lieu</Typography>
-          <Typography sx={{ mb: 2 }}>{departureInfo.location}</Typography>
-          <Typography variant="body2" sx={{ mb: 1 }}>Date & Heure</Typography>
-          <Typography>{departureInfo.date}</Typography>
-        </Box>
-      </Box>
-
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="subtitle1" sx={{ color: 'white', mb: 2 }}>
-          Informations d'arrivée
-        </Typography>
-        <Box sx={{ ml: 2, color: '#888' }}>
-          <Typography variant="body2" sx={{ mb: 1 }}>Location</Typography>
-          <Typography sx={{ mb: 2 }}>{arrivalInfo.location}</Typography>
-          <Typography variant="body2" sx={{ mb: 1 }}>Date & Heure</Typography>
-          <Typography>{arrivalInfo.date}</Typography>
-        </Box>
-      </Box>
-
-      <TableContainer component={Paper} sx={{ bgcolor: '#1a1a1a', mb: 3 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>Libellé</TableCell>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>Nb. jrs/hrs</TableCell>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>Prix</TableCell>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>Total</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {selectedVehicle && (
-              <>
-                <TableRow>
-                  <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>
-                    {selectedVehicle.name.toUpperCase()}
-                  </TableCell>
-                  <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>
-                    {numberOfDays} jrs
-                  </TableCell>
-                  <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>
-                    <Box>
-                      {selectedVehicle.price} /jr
-                      <br />
-                      0 /h
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>
-                    {numberOfDays * selectedVehicle.price}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell colSpan={4} sx={{ color: '#666', borderBottom: '1px solid #333', fontSize: '0.85em', py: 1 }}>
-                    {numberOfDays} jrs × {selectedVehicle.price} = {numberOfDays * selectedVehicle.price}
-                  </TableCell>
-                </TableRow>
-              </>
-            )}
-            {/* Options supplémentaires */}
-            <TableRow>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Box component="span" sx={{ color: 'red', mr: 1 }}>✕</Box>
-                  Conducteur professionnel
-                </Box>
-              </TableCell>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>-</TableCell>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>
-                <Box>
-                  200 /jr
-                  <br />
-                  0 /h
-                </Box>
-              </TableCell>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>600</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Box component="span" sx={{ color: 'red', mr: 1 }}>✕</Box>
-                  Kilométrage limité à 200 km par jour
-                </Box>
-              </TableCell>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>1</TableCell>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>/jour</TableCell>
-              <TableCell sx={{ color: 'white', borderBottom: '1px solid #333' }}>-</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        color: 'white',
-        mb: 3,
-        px: 2,
-        py: 1
-      }}>
-        <Typography sx={{ fontWeight: 'bold' }}>Total : {totalPrice + 600} MAD</Typography>
-      </Box>
-    </Box>
-  );
-};
-
-const RecapTable = ({ headers, rows, total }) => (
-  <Box sx={{ width: '100%', overflow: 'auto' }}>
-    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 4px' }}>
-      <thead>
-        <tr>
-          {headers.map((header, index) => (
-            <th key={index} style={{ 
-              color: 'rgba(255,255,255,0.7)',
-              padding: '8px 12px',
-              textAlign: index === 0 ? 'left' : 'right',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              borderBottom: '1px solid rgba(255,255,255,0.1)'
-            }}>
-              {header}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row, index) => (
-          <tr key={index}>
-            {row.map((cell, cellIndex) => (
-              <td key={cellIndex} style={{ 
-                color: 'white',
-                padding: '8px 12px',
-                textAlign: cellIndex === 0 ? 'left' : 'right',
-                fontSize: '0.875rem',
-                backgroundColor: 'rgba(255,255,255,0.03)'
-              }}>
-                {cell}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-      {total && (
-        <tfoot>
-          <tr>
-            <td colSpan={headers.length - 1} style={{ 
-              textAlign: 'right',
-              padding: '12px',
-              color: 'white',
-              fontWeight: 600,
-              fontSize: '0.875rem'
-            }}>
-              Total:
-            </td>
-            <td style={{ 
-              textAlign: 'right',
-              padding: '12px',
-              color: '#2196F3',
-              fontWeight: 600,
-              fontSize: '0.875rem'
-            }}>
-              {total} MAD
-            </td>
-          </tr>
-        </tfoot>
-      )}
-    </table>
-  </Box>
-);
 
 const DepartRetour = ({ formData, setFormData, error }) => (
   <>

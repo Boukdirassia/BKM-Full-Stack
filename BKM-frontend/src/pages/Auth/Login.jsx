@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -10,7 +10,6 @@ import {
   InputAdornment,
   IconButton,
   Alert,
-  Divider,
   Grid,
   useTheme,
   useMediaQuery,
@@ -23,7 +22,6 @@ import { authService } from '../../services';
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');

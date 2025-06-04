@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import AdminTabs from '../../../components/Admin/Navigation/AdminTabs';
@@ -11,7 +11,6 @@ import { combinedService } from '../../../services';
 
 const ReservationClientLayout = ({ children, onAddReservation, onAddClient }) => {
   const location = useLocation();
-  const currentPath = location.pathname.split('/').pop();
   const [dialogOpen, setDialogOpen] = useState(false);
   
   const tabs = [

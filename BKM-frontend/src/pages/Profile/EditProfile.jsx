@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -22,7 +22,6 @@ import {
   ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
-import authService from '../../services/authService';
 import clientService from '../../services/clientService';
 
 const EditProfile = () => {

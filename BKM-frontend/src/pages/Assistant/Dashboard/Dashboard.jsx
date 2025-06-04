@@ -11,7 +11,6 @@ import {
   TableContainer, 
   TableHead, 
   TableRow,
-  Button,
   Alert,
   Chip,
   Divider,
@@ -19,7 +18,6 @@ import {
   CardContent,
   CardHeader,
   IconButton,
-  Menu,
   MenuItem,
   Avatar,
   List,
@@ -33,10 +31,7 @@ import {
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import PeopleIcon from '@mui/icons-material/People';
 import BookOnlineIcon from '@mui/icons-material/BookOnline';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -77,39 +72,6 @@ const StatCard = ({ title, value, icon, color }) => (
     </Box>
   </Paper>
 );
-
-// Composant pour le statut des réservations
-const ReservationStatus = ({ status }) => {
-  let color = '#FFC107';
-  let icon = <AccessTimeIcon fontSize="small" />;
-  let label = 'En attente';
-
-  if (status === 'confirmed') {
-    color = '#4CAF50';
-    icon = <CheckCircleIcon fontSize="small" />;
-    label = 'Confirmée';
-  } else if (status === 'cancelled') {
-    color = '#F44336';
-    icon = <CancelIcon fontSize="small" />;
-    label = 'Annulée';
-  }
-
-  return (
-    <Chip 
-      icon={icon}
-      label={label}
-      size="small"
-      sx={{ 
-        backgroundColor: color + '20', 
-        color: color,
-        fontWeight: 'bold',
-        '& .MuiChip-icon': {
-          color: color
-        }
-      }}
-    />
-  );
-};
 
 const Dashboard = () => {
   const [timeFilter, setTimeFilter] = useState('month');

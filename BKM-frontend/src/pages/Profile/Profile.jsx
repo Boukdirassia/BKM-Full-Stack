@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -16,9 +16,6 @@ import {
   TableRow,
   Alert,
   CircularProgress,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Chip,
   Avatar
 } from '@mui/material';
@@ -31,24 +28,17 @@ import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
 import AirlineSeatReclineNormalIcon from '@mui/icons-material/AirlineSeatReclineNormal';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import SettingsIcon from '@mui/icons-material/Settings';
-import HistoryIcon from '@mui/icons-material/History';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import PhoneIcon from '@mui/icons-material/Phone';
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import EditIcon from '@mui/icons-material/Edit';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { AlertTitle } from '@mui/material';
-
 import reservationDataService from '../../services/reservationDataService';
 import reservationService from '../../services/reservationService';
 import voitureService from '../../services/voitureService';
 import authService from '../../services/authService';
 import clientService from '../../services/clientService';
-import api from '../../services/api';
 
 const Profile = () => {
   const navigate = useNavigate();

@@ -1,5 +1,18 @@
-import React, { useState, useEffect, Fragment } from 'react';
-import { Container, Typography, Grid, Box, Card, CardMedia, CardContent, Button, CircularProgress, Tabs, Tab, Paper, Divider } from '@mui/material';
+import { useState, useEffect } from 'react';
+import {
+  Container,
+  Typography,
+  Grid,
+  Box,
+  Card,
+  CardMedia,
+  CardContent,
+  Button,
+  CircularProgress,
+  Tabs,
+  Tab,
+  Paper,
+} from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import SettingsIcon from '@mui/icons-material/Settings';

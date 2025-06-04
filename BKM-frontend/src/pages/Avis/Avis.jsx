@@ -1,5 +1,14 @@
-import React from 'react';
-import { Container, Typography, Box, Grid, Card, CardContent, Rating, Avatar, Paper, Divider, useTheme } from '@mui/material';
+import {
+  Container,
+  Typography,
+  Box,
+  Grid,
+  Rating,
+  Avatar,
+  Paper,
+  Divider,
+  useTheme
+} from '@mui/material';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 
 const reviews = [

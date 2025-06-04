@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -15,16 +15,10 @@ import {
   CircularProgress,
   Grid,
   Divider,
-  Card,
-  CardMedia,
-  Avatar
 } from '@mui/material';
 import {
   History as HistoryIcon,
-  DirectionsCar as DirectionsCarIcon,
   CalendarToday as CalendarTodayIcon,
-  Receipt as ReceiptIcon,
-  AttachMoney as AttachMoneyIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';

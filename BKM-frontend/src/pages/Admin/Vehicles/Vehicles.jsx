@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Container,
   Box,
@@ -19,7 +19,6 @@ import {
   DialogActions,
   Grid,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Chip,
@@ -28,11 +27,6 @@ import {
   CircularProgress,
   Avatar,
   Divider,
-  Tooltip,
-  FormControlLabel,
-  Switch,
-  Tabs,
-  Tab,
   IconButton,
   TablePagination
 } from '@mui/material';
@@ -94,7 +88,6 @@ const Vehicles = () => {
 
   const handleSave = async () => {
 
-    
     // Vérification des champs obligatoires
     const newErrors = {};
     if (!newVehicle.Marque || !newVehicle.Marque.trim()) newErrors.Marque = "La marque est obligatoire";

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Box,
@@ -11,9 +11,7 @@ import {
   CardMedia,
   CardActions,
   Paper,
-  InputAdornment,
   MenuItem,
-  Autocomplete,
   Divider,
   Rating,
   Avatar,
@@ -29,13 +27,10 @@ import {
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Security, 
-  Support, 
-  AttachMoney, 
-  LocationOn, 
-  FlightTakeoff, 
-  LocationCity, 
-  Store,
+  AttachMoney,
+  LocationOn,
+  FlightTakeoff,
+  LocationCity,
   Cancel,
   Star,
   LocalShipping,
@@ -49,7 +44,6 @@ import {
   AccessTime,
   Phone,
   Email,
-  Verified,
   Send as SendIcon,
   AlternateEmail as EmailIcon,
   Message as MessageIcon,

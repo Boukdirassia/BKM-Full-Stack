@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Container,
   Box,
   Typography,
   Button,
@@ -13,7 +12,6 @@ import {
   TableBody,
   TextField,
   IconButton,
-  InputAdornment,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -36,23 +34,14 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { fr } from 'date-fns/locale';
-import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import AdminTabs from '../../../components/Admin/Navigation/AdminTabs';
-import PersonIcon from '@mui/icons-material/Person';
-import BookOnlineIcon from '@mui/icons-material/BookOnline';
 import ReservationClientLayout from '../Shared/ReservationClientLayout';
 import '../../../styles/CalendarStyles.css';
 import { reservationService, clientService, voitureService, combinedService, extraService } from '../../../services';

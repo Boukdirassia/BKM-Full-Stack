@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Container,
   Box,
@@ -20,18 +20,11 @@ import {
   DialogActions,
   Grid,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   CircularProgress,
   Snackbar,
   Alert,
-  Divider,
-  Tabs,
-  Tab,
   Avatar,
   TablePagination,
-  Tooltip,
   Slide
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -47,7 +40,6 @@ import AdminTabs from '../../../components/Admin/Navigation/AdminTabs';
 
 const Extras = () => {
   const [extras, setExtras] = useState([]);
-  const [filteredExtras, setFilteredExtras] = useState([]);
   const [open, setOpen] = useState(false);
   const [newExtra, setNewExtra] = useState({ 
     Nom: '', 

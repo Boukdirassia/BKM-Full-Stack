@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Container,
   Box,
   Typography,
   Button,
@@ -18,33 +17,15 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Grid,
   Snackbar,
   Alert,
   CircularProgress,
-  Divider,
-  Tooltip,
-  Tabs,
-  Tab,
   Avatar,
   TablePagination
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import PersonIcon from '@mui/icons-material/Person';
-import BadgeIcon from '@mui/icons-material/Badge';
-import CakeIcon from '@mui/icons-material/Cake';
-import DriveEtaIcon from '@mui/icons-material/DriveEta';
-import EventIcon from '@mui/icons-material/Event';
-import HomeIcon from '@mui/icons-material/Home';
-import AdminTabs from '../../../components/Admin/Navigation/AdminTabs';
-import BookOnlineIcon from '@mui/icons-material/BookOnline';
 import ReservationClientLayout from '../Shared/ReservationClientLayout';
 import { clientService } from '../../../services';
 
